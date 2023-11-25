@@ -1,0 +1,22 @@
+# Используйте Node.js 18
+FROM node:18 as development
+# Установите рабочую директорию
+WORKDIR /app
+# Скопируйте package.json и package-lock.json для установки зависимостей
+COPY package*.json ./
+# Установите зависимости
+RUN npm install
+# Скопируйте все файлы из текущего каталога в рабочую директорию
+COPY . .
+# Соберите React приложение
+RUN npm run build:prod
+# Используйте Nginx для запуска приложения
+FROM nginx:stable-alpine
+# Копируйте статические файлы из build-стадии в директорию Nginx
+COPY --from=build /app/build /usr/share/nginx/html
+# Копируйте конфигурационный файл Nginx
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+# Экспонируйте порт 80
+EXPOSE 80
+# Запустите Nginx
+CMD ["nginx", "-g", "daemon off;"]
